@@ -1,4 +1,6 @@
 <?php
+
+namespace Core;
 /**
  * class Router
  */
@@ -87,4 +89,108 @@ class Router
     {
         return $this->params;
     }
+
+    /**
+     * dispatch the url, try to load matched action of controller
+     *
+     * @param [string] $url
+     * @return void
+     */
+    public function dispatch($url)
+    {
+        $url = $this->removeQueryStringVariables($url);
+        //echo $url;
+        if ($this->match($url)) {
+            $controller = $this->params['controller'];
+            $controller = $this->convertToStudlyCaps($controller);
+            $controller = $this->getNamespace() . $controller;
+
+            if (class_exists($controller)) {
+                $controller_object = new $controller($this->params);
+
+                $action = $this->params['action'];
+                $action = $this->convertToCamelCase($action);
+
+                if (preg_match('/action$/i', $action) == 0) {
+                    $controller_object->$action();
+                } else {
+                    throw new \Exception("Method $action in controller $controller cannot
+                     be called directly - remove the Action suffix to call this method");
+                }
+                
+            } else {
+                echo "Controller class $controller not found";
+            }
+        } else {
+            echo 'No route matched.';
+        }
+    }
+
+    /**
+     * convert a string with - to StudyCaps
+     *
+     * @param [string] $string
+     * @return void
+     */
+    protected function convertToStudlyCaps($string) {
+        return str_replace(' ', '', ucwords(str_replace('-', ' ', $string)));
+    }
+
+    /**
+     * convert a string with - to camelCase
+     *
+     * @param [string] $string
+     * @return void
+     */
+    protected function convertToCamelCase($string) {
+        return lcfirst($this->convertToStudlyCaps($string));
+    }
+
+    /**
+     * Remove the query string variables from the URL (if any). As the full
+     * query string is used for the route, any variables at the end will need
+     * to be removed before the route is matched to the routing table. For
+     * example:
+     *
+     *   URL                           $_SERVER['QUERY_STRING']  Route
+     *   -------------------------------------------------------------------
+     *   localhost                     ''                        ''
+     *   localhost/?                   ''                        ''
+     *   localhost/?page=1             page=1                    ''
+     *   localhost/posts?page=1        posts&page=1              posts
+     *   localhost/posts/index         posts/index               posts/index
+     *   localhost/posts/index?page=1  posts/index&page=1        posts/index
+     *
+     * A URL of the format localhost/?page (one variable name, no value) won't
+     * work however. (NB. The .htaccess file converts the first ? to a & when
+     * it's passed through to the $_SERVER variable).
+     *
+     * @param string $url The full URL
+     *
+     * @return string The URL with the query string variables removed
+     */
+    protected function removeQueryStringVariables($url)
+    {
+        if ($url != '') {
+            $parts = explode('&', $url, 2);
+
+            if (strpos($parts[0], '=') === false) {
+                $url = $parts[0];
+            } else {
+                $url = '';
+            }
+        }
+
+        return $url;
+    }
+
+    protected function getNamespace()
+    {
+        $namespace = "App\Controllers\\";
+        if (array_key_exists('namespace', $this->params)) {
+            $namespace .= $this->params['namespace'] . '\\';
+        }
+        return $namespace;
+    }
+
 }

@@ -5,29 +5,32 @@
  * 
  * PHP version 7.3.11
  */
-require('../Core/Router.php');
 
-$router = new Router();
+spl_autoload_register(function($class) {
+    $root = dirname(__DIR__);//get the root directory of this site
+    $file = $root . '/' . str_replace('\\', '/', $class) . '.php';//use \\ to represent \
+    //echo $file;
+    if (is_readable($file)) {
+        require $file;
+    }
+});
+
+$router = new Core\Router();
 
 $router ->add('', ['controller' => 'Home', 'action' => 'index']);
-$router ->add('posts', ['controller' => 'Posts', 'action' => 'index']);
 $router ->add('{controller}/{action}');
 $router ->add('{controller}/{id:\d+}/{action}');
-$router ->add('admin/{action}/{controller}');
-
-echo '<pre>';
-echo htmlspecialchars(print_r($router ->getRoutes(), true));
-echo '</pre>';
+//don't add / before admin
+$router ->add('admin/{controller}/{action}', ['namespace' => 'Admin']);
 
 $url = $_SERVER['QUERY_STRING'];
 
-if ($router->match($url)) {
-    echo '<pre>';
-    var_dump($router->getParams());
-    echo '</pre>';
-} else {
-    echo "No route found for URL '$url'";
-}
+$router->dispatch($url);
+/*
+echo '<pre>';
+var_dump($router->getRoutes());
+echo '</pre>';
+*/
 
 
 
