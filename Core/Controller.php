@@ -35,7 +35,7 @@ abstract class Controller
      * @param [array] $args
      * @return void
      */
-    public function __call($name, $args)
+    public function __call($name, $args = [])
     {
         $method = $name . 'Action';
         if (method_exists($this, $method)) {
@@ -44,7 +44,7 @@ abstract class Controller
                 $this->after();
             } 
         }else {
-            echo "Method $method not found in controller " . get_class($this);
+            throw new \Exception("Method $method not found in controller " . get_class($this));
         }
     }
 

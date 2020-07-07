@@ -119,10 +119,10 @@ class Router
                 }
                 
             } else {
-                echo "Controller class $controller not found";
+                throw new \Exception("Controller class $controller not found");
             }
         } else {
-            echo 'No route matched.';
+            throw new \Exception('No route matched.', 404);
         }
     }
 
