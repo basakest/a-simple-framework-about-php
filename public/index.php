@@ -6,14 +6,6 @@
  * PHP version 7.3.11
  */
 require_once dirname(__DIR__) . "/vendor/autoload.php";
-spl_autoload_register(function($class) {
-    $root = dirname(__DIR__);//get the root directory of this site
-    $file = $root . '/' . str_replace('\\', '/', $class) . '.php';//use \\ to represent \
-    //echo $file;
-    if (is_readable($file)) {
-        require $file;
-    }
-});
 
 $router = new Core\Router();
 
